@@ -259,13 +259,6 @@ export interface GameState {
     you: Battlesnake
 }
 
-export enum Direction {
-    up = 'up',
-    left = 'left',
-    down = 'down',
-    right = 'right'
-}
-
 export interface Move {
     /**
      * Your Battlesnake's move for this turn.

@@ -1,7 +1,7 @@
 import bodyParser from 'body-parser'
 import express, { Request, Response } from 'express'
 
-import { SnakeInfo, Move, Direction, GameRequest } from './types'
+import { SnakeInfo, Move, GameRequest } from './types'
 
 const PORT = process.env.PORT || 3000
 
@@ -14,6 +14,13 @@ app.post('/move', handleMove)
 app.post('/end', handleEnd)
 
 app.listen(PORT, () => console.log(`TypeScript Battlesnake Server listening at http://127.0.0.1:${PORT}`))
+
+enum Direction {
+    up = 'up',
+    left = 'left',
+    down = 'down',
+    right = 'right'
+}
 
 function handleIndex(request: Request, response: Response<SnakeInfo>) {
     const battlesnakeInfo: SnakeInfo = {
