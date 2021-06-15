@@ -110,8 +110,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         if (!board.isValid(newCoords)) {
             validMoves.delete(direction);
             optimalMoves.delete(direction);
-        }
-        if (gameData.you.health < 25) {
+        } else if (gameData.you.health < 25) {
             let dist = 500;
             let food: Coordinates = { x: -1, y: -1 };
             gameData.board.food.forEach(coord => {
