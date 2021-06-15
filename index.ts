@@ -18,10 +18,10 @@ app.listen(PORT, () => console.log(`TypeScript Battlesnake Server listening at h
 function handleIndex(request: Request, response: Response<SnakeInfo>) {
     const battlesnakeInfo: SnakeInfo = {
         apiversion: '1',
-        author: '',
-        color: '#888888',
-        head: 'default',
-        tail: 'default',
+        author: 'adisam',
+        color: '#2bbfec',
+        head: 'bendr',
+        tail: 'small-rattle',
     }
     response.status(200).json(battlesnakeInfo)
 }
@@ -36,7 +36,7 @@ function handleStart(request: GameRequest, response: Response) {
 function handleMove(request: GameRequest, response: Response<Move>) {
     const gameData = request.body
 
-    const possibleMoves: Direction[] = ['up', 'down', 'left', 'right']
+    const possibleMoves: Direction[] = [Direction.up, Direction.down, Direction.left, Direction.right]
     const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
 
     console.log('MOVE: ' + move)
