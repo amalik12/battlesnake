@@ -73,6 +73,10 @@ function constructBoard(data: GameState) {
     return board;
 }
 
+function distance(start: Coordinates, end: Coordinates) {
+    return Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
+}
+
 function handleIndex(request: Request, response: Response<SnakeInfo>) {
     const battlesnakeInfo: SnakeInfo = {
         apiversion: '1',
@@ -97,19 +101,36 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     
     const position = gameData.you.head;
     const possibleMoves: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
-    const moves: Array<Direction> = [];
+    const validMoves: Set<Direction> = new Set(possibleMoves);
+    const optimalMoves: Set<Direction> = new Set(possibleMoves);
 
     possibleMoves.forEach(direction => {
         const delta = directionToCoords[direction];
         const newCoords = { x: position.x + delta.x, y: position.y + delta.y };
-        if (board.isValid(newCoords)) {
-            moves.push(direction);
+        if (!board.isValid(newCoords)) {
+            validMoves.delete(direction);
+            optimalMoves.delete(direction);
+        }
+        if (gameData.you.health < 25) {
+            let dist = 500;
+            let food: Coordinates = { x: -1, y: -1 };
+            gameData.board.food.forEach(coord => {
+                if (distance(position, coord) < dist) {
+                    dist = distance(position, coord);
+                    food = coord;
+                }
+            })
+            if (distance(newCoords, food) > dist) {
+                optimalMoves.delete(direction);
+            }
         }
     })
 
-    let move = moves[0];
-    if (moves.includes(lastDirection)) {
-        move = lastDirection;
+    let move: Direction;
+    if (optimalMoves.size > 0) {
+        move = optimalMoves.values().next().value;
+    } else {
+        move = validMoves.values().next().value;
     }
 
     console.log('MOVE: ' + move)
