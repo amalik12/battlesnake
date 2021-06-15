@@ -94,7 +94,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     const board = constructBoard(gameData);
     
     const position = gameData.you.head;
-    const possibleMoves: Direction[] = [Direction.up, Direction.down, Direction.left, Direction.right]
+    const possibleMoves: Direction[] = [Direction.up, Direction.right, Direction.left, Direction.down]
     const moves: Direction[] = [];
 
     possibleMoves.forEach(direction => {
@@ -104,12 +104,10 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             moves.push(direction);
         }
     })
-    
-    const move = moves[Math.floor(Math.random() * moves.length)]
 
-    console.log('MOVE: ' + move)
+    console.log('MOVE: ' + moves[0])
     response.status(200).send({
-        move: move,
+        move: moves[0],
     })
 }
 
