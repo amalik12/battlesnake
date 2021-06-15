@@ -62,6 +62,8 @@ const directionToCoords = {
     [Direction.right]: { x: 1, y: 0 }
 }
 
+let lastDirection: Direction = Direction.up;
+
 function constructBoard(data: GameState) {
     let board: Board = new Board(data.board.width, data.board.height);
     data.board.food.forEach(food => board.writeData(food, 'food'));
@@ -94,8 +96,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     const board = constructBoard(gameData);
     
     const position = gameData.you.head;
-    const possibleMoves: Direction[] = [Direction.up, Direction.right, Direction.left, Direction.down]
-    const moves: Direction[] = [];
+    const possibleMoves: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+    const moves: Array<Direction> = [];
 
     possibleMoves.forEach(direction => {
         const delta = directionToCoords[direction];
@@ -105,9 +107,14 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         }
     })
 
-    console.log('MOVE: ' + moves[0])
+    let move = moves[0];
+    if (moves.includes(lastDirection)) {
+        move = lastDirection;
+    }
+
+    console.log('MOVE: ' + move)
     response.status(200).send({
-        move: moves[0],
+        move: move,
     })
 }
 
