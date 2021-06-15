@@ -118,7 +118,7 @@ export interface Board {
      * These will only appear in some game modes.
      * Example: [{"x": 0, "y": 0}, ..., {"x": 0, "y": 1}]
      */
-    harzards: Coordinates[]
+    hazards: Coordinates[]
 
     /**
      * Array of Battlesnake Objects representing all Battlesnakes
@@ -256,7 +256,7 @@ export interface GameState {
     /**
      * Battlesnake Object describing your Battlesnake.
      */
-    you: Battlesnake
+    you: Snake
 }
 
 export interface Move {
