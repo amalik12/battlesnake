@@ -70,26 +70,24 @@ class Board {
     }
 
     isReachable(start: Coordinates, end: Coordinates) {
-        return this.isReachableSearch(start, end, this.grid.map(row => row.slice()));
-
-    }
-
-    private isReachableSearch(start: Coordinates, end: Coordinates, grid: string[][]) {
+        console.log(start);
         if (start.x === end.x && start.y === end.y) {
             return true;
         }
         if (!this.isInBounds(start) || !this.isUnoccupied(start)) {
             return false;
         }
-
-        grid[this.height - 1 - start.y][start.x] = 'm';
+        const origValue = this.getData(start);
+        this.writeData(start, 'm');
         for (let i = 0; i < directions.length; i++) {
             const delta = directionToCoords[directions[i]];
             const newCoords: Coordinates = { x: start.x + delta.x, y: start.y + delta.y };
-            if (this.isReachableSearch(newCoords, end, grid)) {
+            if (this.isReachable(newCoords, end)) {
+                this.writeData(start, origValue);
                 return true;
             }
         }
+        this.writeData(start, origValue);
         return false;
     }
 
@@ -152,6 +150,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     let move: Direction = Direction.up;
     let maxScore = -50;
 
+    console.log(position);
     directions.forEach(direction => {
         const delta = directionToCoords[direction];
         const newCoords = { x: position.x + delta.x, y: position.y + delta.y };
@@ -189,9 +188,11 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             })
             if (board.isOnEdge(position)) {
                 const tail = gameData.you.body[gameData.you.body.length - 1];
+                console.log('searching');
                 if (!board.isReachable(newCoords, tail)) {
                     scores[direction] -= 5;
                 }
+                console.log('done');
             }
         }
         if (scores[direction] > maxScore) {
