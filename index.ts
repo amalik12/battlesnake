@@ -22,11 +22,13 @@ enum Direction {
     right = 'right'
 }
 
+const directions: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+
 class Board {
-    width: number;
-    height: number;
-    grid: string[][];
-    snakeMap: Map<string, Snake>;
+    private width: number;
+    private height: number;
+    private grid: string[][];
+    private snakeMap: Map<string, Snake>;
 
     constructor(width: number, height: number, food: Coordinates[], snakes: Snake[]) {
         this.width = width;
@@ -57,9 +59,38 @@ class Board {
         return this.getData(coords) === '' || this.getData(coords) === 'food';
     }
 
+    isOnEdge(coords: Coordinates) {
+        return coords.y === 0 || coords.y === this.height - 1 
+        || coords.x === 0 || coords.x === this.width - 1;
+    }
+
     isSnakeHead(coords: Coordinates) {
         const snake = this.snakeMap.get(this.getData(coords))
         return snake?.head.x === coords.x && snake.head.y === coords.y;
+    }
+
+    isReachable(start: Coordinates, end: Coordinates) {
+        return this.isReachableSearch(start, end, this.grid.map(row => row.slice()));
+
+    }
+
+    private isReachableSearch(start: Coordinates, end: Coordinates, grid: string[][]) {
+        if (start.x === end.x && start.y === end.y) {
+            return true;
+        }
+        if (!this.isInBounds(start) || !this.isUnoccupied(start)) {
+            return false;
+        }
+
+        grid[this.height - 1 - start.y][start.x] = 'm';
+        for (let i = 0; i < directions.length; i++) {
+            const delta = directionToCoords[directions[i]];
+            const newCoords: Coordinates = { x: start.x + delta.x, y: start.y + delta.y };
+            if (this.isReachableSearch(newCoords, end, grid)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     headToHead(id: string, length: number) {
@@ -110,7 +141,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     const board = new Board(gameData.board.width, gameData.board.height, gameData.board.food, gameData.board.snakes);
     
     const position = gameData.you.head;
-    const directions: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+    
     const scores = {
         [Direction.up]: 0,
         [Direction.down]: 0,
@@ -156,6 +187,12 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 }
                 return true;
             })
+            if (board.isOnEdge(position)) {
+                const tail = gameData.you.body[gameData.you.body.length - 1];
+                if (!board.isReachable(newCoords, tail)) {
+                    scores[direction] -= 5;
+                }
+            }
         }
         if (scores[direction] > maxScore) {
             maxScore = scores[direction];
