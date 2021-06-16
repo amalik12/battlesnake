@@ -111,15 +111,21 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     
     const position = gameData.you.head;
     const directions: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
-    const validMoves: Set<Direction> = new Set(directions);
-    const optimalMoves: Set<Direction> = new Set(directions);
+    const scores = {
+        [Direction.up]: 0,
+        [Direction.down]: 0,
+        [Direction.left]: 0,
+        [Direction.right]: 0
+    }
+
+    let move: Direction = Direction.up;
+    let maxScore = -50;
 
     directions.forEach(direction => {
         const delta = directionToCoords[direction];
         const newCoords = { x: position.x + delta.x, y: position.y + delta.y };
         if (!board.isInBounds(newCoords) || !board.isUnoccupied(newCoords)) {
-            validMoves.delete(direction);
-            optimalMoves.delete(direction);
+            scores[direction] -= 10;           
         } else {
             let dist = 500;
             let food: Coordinates = { x: -1, y: -1 };
@@ -129,8 +135,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                     food = coord;
                 }
             })
-            if ((gameData.you.health < 25 || dist <= 3) && distance(newCoords, food) > dist) {
-                optimalMoves.delete(direction);
+            if ((gameData.you.health < 25 || dist <= 3) && distance(newCoords, food) < dist) {
+                scores[direction] += 1;
             }
             directions.every(adjacent => {
                 const adjDelta = directionToCoords[adjacent];
@@ -141,25 +147,21 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 const data = board.getData(adjCoords);
                 if (data !== gameData.you.id) {
                     if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
-                        optimalMoves.delete(direction);
+                        scores[direction] -= 10;
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
-                        optimalMoves.clear();
-                        optimalMoves.add(direction);
+                        scores[direction] += 10;
                         return false;
                     }
                 }
                 return true;
             })
         }
+        if (scores[direction] > maxScore) {
+            maxScore = scores[direction];
+            move = direction;
+        }
     })
-
-    let move: Direction;
-    if (optimalMoves.size > 0) {
-        move = optimalMoves.values().next().value;
-    } else {
-        move = validMoves.values().next().value;
-    }
 
     console.log('MOVE: ' + move)
     response.status(200).send({
