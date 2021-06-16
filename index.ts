@@ -1,7 +1,7 @@
 import bodyParser from 'body-parser'
 import express, { Request, Response } from 'express'
 
-import { SnakeInfo, Move, GameRequest, GameState, Coordinates } from './types'
+import { SnakeInfo, Move, GameRequest, GameState, Coordinates, Snake } from './types'
 
 const PORT = process.env.PORT || 3000
 
@@ -62,8 +62,6 @@ const directionToCoords = {
     [Direction.right]: { x: 1, y: 0 }
 }
 
-let lastDirection: Direction = Direction.up;
-
 function constructBoard(data: GameState) {
     let board: Board = new Board(data.board.width, data.board.height);
     data.board.food.forEach(food => board.writeData(food, 'food'));
@@ -98,6 +96,12 @@ function handleStart(request: GameRequest, response: Response) {
 function handleMove(request: GameRequest, response: Response<Move>) {
     const gameData: GameState = request.body
     const board = constructBoard(gameData);
+
+    const snakeMap: Map<string, Snake> = new Map();
+
+    gameData.board.snakes.forEach(snake => {
+        snakeMap.set(snake.id, snake);
+    })
     
     const position = gameData.you.head;
     const possibleMoves: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
@@ -110,18 +114,36 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         if (!board.isValid(newCoords)) {
             validMoves.delete(direction);
             optimalMoves.delete(direction);
-        } else if (gameData.you.health < 25) {
-            let dist = 500;
-            let food: Coordinates = { x: -1, y: -1 };
-            gameData.board.food.forEach(coord => {
-                if (distance(position, coord) < dist) {
-                    dist = distance(position, coord);
-                    food = coord;
+        } else {
+            if (gameData.you.health < 25) {
+                let dist = 500;
+                let food: Coordinates = { x: -1, y: -1 };
+                gameData.board.food.forEach(coord => {
+                    if (distance(position, coord) < dist) {
+                        dist = distance(position, coord);
+                        food = coord;
+                    }
+                })
+                if (distance(newCoords, food) > dist) {
+                    optimalMoves.delete(direction);
                 }
-            })
-            if (distance(newCoords, food) > dist) {
-                optimalMoves.delete(direction);
             }
+            possibleMoves.every(adjacent => {
+                const adjDelta = directionToCoords[adjacent];
+                const adjCoords = { x: newCoords.x + adjDelta.x, y: newCoords.y + adjDelta.y };
+                if (!board.isValid(adjCoords)) {
+                    return true;
+                }
+                const data = board.getData(adjCoords);
+                if (data !== gameData.you.id && snakeMap.has(data)) {
+                    const snake = snakeMap.get(data);
+                    if (snake?.head.x === adjCoords.x && snake.head.y === adjCoords.y && snake.length >= gameData.you.length) {
+                        optimalMoves.delete(direction);
+                        return false;
+                    }
+                }
+                return true;
+            })
         }
     })
 
