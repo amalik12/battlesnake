@@ -121,18 +121,16 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             validMoves.delete(direction);
             optimalMoves.delete(direction);
         } else {
-            if (gameData.you.health < 25) {
-                let dist = 500;
-                let food: Coordinates = { x: -1, y: -1 };
-                gameData.board.food.forEach(coord => {
-                    if (distance(position, coord) < dist) {
-                        dist = distance(position, coord);
-                        food = coord;
-                    }
-                })
-                if (distance(newCoords, food) > dist) {
-                    optimalMoves.delete(direction);
+            let dist = 500;
+            let food: Coordinates = { x: -1, y: -1 };
+            gameData.board.food.forEach(coord => {
+                if (distance(position, coord) < dist) {
+                    dist = distance(position, coord);
+                    food = coord;
                 }
+            })
+            if ((gameData.you.health < 25 || dist <= 3) && distance(newCoords, food) > dist) {
+                optimalMoves.delete(direction);
             }
             directions.every(adjacent => {
                 const adjDelta = directionToCoords[adjacent];
