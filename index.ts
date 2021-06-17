@@ -258,7 +258,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         }
     })
 
-    console.log('Game:', gameData.game.id, 'Turn:', gameData.turn, 'MOVE:', move)
+    console.log('Game:', gameData.game.id, 'Turn:', gameData.turn, 'Scores:', scores, 'Move:', move)
     
     if (state !== undefined) {
         state.lastDirection = move;
