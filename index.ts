@@ -217,7 +217,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 const data = board.getData(adjCoords);
                 if (data !== gameData.you.id) {
                     if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
-                        scores[direction] -= 10;
+                        scores[direction] -= 12;
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
                         scores[direction] += 10;
