@@ -248,7 +248,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 if (searchResult < 0) {
                     scores[direction] -= 6;
                 }
-                scores[direction] += searchResult * 0.1;
+                scores[direction] += Math.abs(searchResult) * 0.1;
                 console.log('done');
             }
         }
