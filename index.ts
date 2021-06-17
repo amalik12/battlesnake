@@ -48,11 +48,13 @@ class Board {
     private height: number;
     private grid: string[][];
     private snakeMap: Map<string, Snake>;
+    private id: string;
 
-    constructor(width: number, height: number, food: Coordinates[], snakes: Snake[]) {
+    constructor(width: number, height: number, food: Coordinates[], snakes: Snake[], id: string) {
         this.width = width;
         this.height = height;
         this.grid = [];
+        this.id = id;
         for (let index = 0; index < height; index++) {
             this.grid.push([])
         }
@@ -95,7 +97,7 @@ class Board {
             [Diagonal.southeast]: Diagonal.northwest
         }
         for (let index = 0; index < ADJACENT_DIRECTIONS.length; index++) {
-            if (reverseDirection[ADJACENT_DIRECTIONS[index]] === lastDirection) {
+            if (reverseDirection[ADJACENT_DIRECTIONS[index]] === stateMap.get(this.id)?.lastDirection) {
                 continue;   
             }
             const adjCoords: Coordinates = getAdjacentCoords(coords, ADJACENT_DIRECTIONS[index]);
@@ -191,7 +193,7 @@ function handleStart(request: GameRequest, response: Response) {
 
 function handleMove(request: GameRequest, response: Response<Move>) {
     const gameData: GameState = request.body
-    const board = new Board(gameData.board.width, gameData.board.height, gameData.board.food, gameData.board.snakes);
+    const board = new Board(gameData.board.width, gameData.board.height, gameData.board.food, gameData.board.snakes, gameData.game.id);
     
     const position = gameData.you.head;
     
@@ -209,7 +211,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     DIRECTIONS.forEach(direction => {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
         const tail = gameData.you.body[gameData.you.body.length - 1];
-        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten)) {
+        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten))) {
             scores[direction] -= 10;           
         } else {
             let dist = 500;
