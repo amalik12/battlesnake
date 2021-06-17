@@ -139,7 +139,6 @@ class Board {
 
             if (areCoordsEqual(node, end)) {
                 found = true;
-                break;
             }
             if (visited.has(node.x + ',' + node.y) || !this.isInBounds(node) || !this.isUnoccupied(node)) {
                 continue;
