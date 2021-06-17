@@ -144,8 +144,12 @@ class Board {
 
     headToHead(id: string, length: number) {
         const snake = this.snakeMap.get(id)
-        return snake !== undefined && snake.length < length;
+        if (snake === undefined) return 0;
+        if (snake.length < length) return 1;
+        if (snake.length === length) return 0;
+        return -1;
     }
+
 
     getData(coords: Coordinates) {
         return this.grid[this.height - 1 - coords.y][coords.x];
@@ -231,7 +235,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
         const tail = gameData.you.body[gameData.you.body.length - 1];
         if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten))) {
-            scores[direction] -= 22;           
+            scores[direction] -= 40;           
         } else {
             let dist = 500;
             let food: Coordinates = { x: -1, y: -1 };
@@ -251,10 +255,13 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 }
                 const data = board.getData(adjCoords);
                 if (data !== gameData.you.id) {
-                    if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
+                    if (board.isSnakeHead(adjCoords) && board.headToHead(data, gameData.you.length) <= 0) {
                         scores[direction] -= 12;
                         if (getDirection(adjCoords, newCoords) === board.getSnakeDirection(data)) {
                             scores[direction] -= 2;
+                        }
+                        if (board.headToHead(data, gameData.you.length) === -1) {
+                            scores[direction] -= 1;
                         }
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
