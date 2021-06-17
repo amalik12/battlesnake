@@ -108,20 +108,9 @@ class Board {
         return false;
     }
 
-    getDirection(start: Coordinates, end: Coordinates) {
-        const coordsToDirection: any = {
-            '0,1': Direction.up,
-            '0,-1': Direction.down,
-            '-1,0': Direction.left,
-            '1,0': Direction.right
-        }
-        const dirString = (end.x - start.x) + ',' + (end.y - start.y);
-        return coordsToDirection[dirString];
-    }
-
     getSnakeDirection(id: string) {
         const snake = this.snakeMap.get(id);
-        if (snake !== undefined) return this.getDirection(snake?.body[1], snake?.body[0])
+        if (snake !== undefined) return getDirection(snake?.body[1], snake?.body[0])
     }
 
     isSnakeHead(coords: Coordinates) {
@@ -190,6 +179,17 @@ function getAdjacentCoords(position: Coordinates, direction: AdjacentDirection) 
     return { x: position.x + delta.x, y: position.y + delta.y };
 }
 
+function getDirection(start: Coordinates, end: Coordinates) {
+    const coordsToDirection: any = {
+        '0,1': Direction.up,
+        '0,-1': Direction.down,
+        '-1,0': Direction.left,
+        '1,0': Direction.right
+    }
+    const dirString = (end.x - start.x) + ',' + (end.y - start.y);
+    return coordsToDirection[dirString];
+}
+
 function handleIndex(request: Request, response: Response<SnakeInfo>) {
     const battlesnakeInfo: SnakeInfo = {
         apiversion: '1',
@@ -253,7 +253,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 if (data !== gameData.you.id) {
                     if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
                         scores[direction] -= 12;
-                        if (board.getDirection(adjCoords, newCoords) === board.getSnakeDirection(data)) {
+                        if (getDirection(adjCoords, newCoords) === board.getSnakeDirection(data)) {
                             scores[direction] -= 2;
                         }
                         return false;
