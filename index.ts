@@ -238,6 +238,9 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 if (data !== gameData.you.id) {
                     if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
                         scores[direction] -= 12;
+                        if (direction != state?.lastDirection) {
+                            scores[direction] += 1;
+                        }
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
                         scores[direction] += 10;
