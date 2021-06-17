@@ -212,7 +212,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
         const tail = gameData.you.body[gameData.you.body.length - 1];
         if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten))) {
-            scores[direction] -= 12;           
+            scores[direction] -= 14;           
         } else {
             let dist = 500;
             let food: Coordinates = { x: -1, y: -1 };
