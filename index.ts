@@ -116,22 +116,26 @@ class Board {
     isReachable(start: Coordinates, end: Coordinates) {
         const visited = new Set();
         const stack: Coordinates[] = [start];
+        let found = false;
         while (stack.length > 0) {
             const node = stack.pop();
             if (node === undefined) break;
 
             if (areCoordsEqual(node, end)) {
-                return visited.size;
+                found = true;
+                break;
             }
             if (visited.has(node.x + ',' + node.y) || !this.isInBounds(node) || !this.isUnoccupied(node)) {
-                return -visited.size;
+                continue;
             }
             visited.add(node.x + ',' + node.y);
             for (let i = 0; i < DIRECTIONS.length; i++) {
                 stack.push(getAdjacentCoords(node, DIRECTIONS[i]));
             }
-            return -visited.size;
         }
+        let result = visited.size;
+        if (!found) result *= -1;
+        return result;
     }
 
     headToHead(id: string, length: number) {
