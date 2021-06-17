@@ -70,25 +70,25 @@ class Board {
     }
 
     isReachable(start: Coordinates, end: Coordinates) {
-        console.log(start);
-        if (start.x === end.x && start.y === end.y) {
-            return true;
-        }
-        if (!this.isInBounds(start) || !this.isUnoccupied(start)) {
-            return false;
-        }
-        const origValue = this.getData(start);
-        this.writeData(start, 'm');
-        for (let i = 0; i < directions.length; i++) {
-            const delta = directionToCoords[directions[i]];
-            const newCoords: Coordinates = { x: start.x + delta.x, y: start.y + delta.y };
-            if (this.isReachable(newCoords, end)) {
-                this.writeData(start, origValue);
-                return true;
-            }
-        }
-        this.writeData(start, origValue);
-        return false;
+        return this.isReachableSearch(start, end, {});
+    }
+
+    private isReachableSearch(start: Coordinates, end: Coordinates, map: any) {
+      if (start.x === end.x && start.y === end.y) {
+          return true;
+      }
+      if (map[start.x + ',' + start.y] !== undefined || !this.isInBounds(start) || !this.isUnoccupied(start)) {
+          return false;
+      }
+      map[start.x + ',' + start.y] = 1;
+      for (let i = 0; i < directions.length; i++) {
+          const delta = directionToCoords[directions[i]];
+          const newCoords: Coordinates = { x: start.x + delta.x, y: start.y + delta.y };
+          if (this.isReachableSearch(newCoords, end, map)) {
+              return true;
+          }
+      }
+      return false;
     }
 
     headToHead(id: string, length: number) {
