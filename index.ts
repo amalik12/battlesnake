@@ -249,7 +249,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                     scores[direction] -= 6;
                 }
                 scores[direction] += Math.abs(searchResult) * 0.1;
-                console.log('done');
+                console.log('done', direction, searchResult);
             }
         }
         if (scores[direction] > maxScore) {
