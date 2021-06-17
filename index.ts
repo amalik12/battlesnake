@@ -118,20 +118,20 @@ class Board {
     }
 
     private isReachableSearch(start: Coordinates, end: Coordinates, map: any) {
-      if (areCoordsEqual(start, end)) {
-          return true;
-      }
-      if (map[start.x + ',' + start.y] !== undefined || !this.isInBounds(start) || !this.isUnoccupied(start)) {
-          return false;
-      }
-      map[start.x + ',' + start.y] = 1;
-      for (let i = 0; i < DIRECTIONS.length; i++) {
-          const newCoords: Coordinates = getAdjacentCoords(start, DIRECTIONS[i]);
-          if (this.isReachableSearch(newCoords, end, map)) {
-              return true;
-          }
-      }
-      return false;
+        if (areCoordsEqual(start, end)) {
+            return Object.keys(map).length;
+        }
+        if (map[start.x + ',' + start.y] !== undefined || !this.isInBounds(start) || !this.isUnoccupied(start)) {
+            return -Object.keys(map).length;
+        }
+        map[start.x + ',' + start.y] = 1;
+        for (let i = 0; i < DIRECTIONS.length; i++) {
+            const newCoords: Coordinates = getAdjacentCoords(start, DIRECTIONS[i]);
+            if (this.isReachableSearch(newCoords, end, map)) {
+                return Object.keys(map).length;
+            }
+        }
+        return -Object.keys(map).length;
     }
 
     headToHead(id: string, length: number) {
@@ -244,9 +244,11 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             })
             if (board.isOnEdge(position) || board.isBodyBlocked(position)) {
                 console.log('searching');
-                if (!board.isReachable(newCoords, tail)) {
-                    scores[direction] -= 5;
+                const searchResult = board.isReachable(newCoords, tail);
+                if (searchResult < 0) {
+                    scores[direction] -= 6;
                 }
+                scores[direction] += searchResult * 0.1;
                 console.log('done');
             }
         }
