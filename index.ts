@@ -108,6 +108,22 @@ class Board {
         return false;
     }
 
+    getDirection(start: Coordinates, end: Coordinates) {
+        const coordsToDirection: any = {
+            '0,1': Direction.up,
+            '0,-1': Direction.down,
+            '-1,0': Direction.left,
+            '1,0': Direction.right
+        }
+        const dirString = (end.x - start.x) + ',' + (end.y - start.y);
+        return coordsToDirection[dirString];
+    }
+
+    getSnakeDirection(id: string) {
+        const snake = this.snakeMap.get(id);
+        if (snake !== undefined) return this.getDirection(snake?.body[1], snake?.body[0])
+    }
+
     isSnakeHead(coords: Coordinates) {
         const snake = this.snakeMap.get(this.getData(coords))
         return snake !== undefined && areCoordsEqual(snake.head, coords);
@@ -238,8 +254,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 if (data !== gameData.you.id) {
                     if (board.isSnakeHead(adjCoords) && !board.headToHead(data, gameData.you.length)) {
                         scores[direction] -= 12;
-                        if (direction != state?.lastDirection) {
-                            scores[direction] += 1;
+                        if (board.getDirection(adjCoords, newCoords) === board.getSnakeDirection(data)) {
+                            scores[direction] -= 2;
                         }
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
