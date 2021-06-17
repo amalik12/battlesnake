@@ -22,7 +22,18 @@ enum Direction {
     right = 'right'
 }
 
+enum Diagonal {
+    northwest = 'northwest',
+    northeast = 'northeast',
+    southwest = 'southwest',
+    southeast = 'southeast'
+}
+
+type AdjacentDirection = Direction | Diagonal;
+
 const DIRECTIONS: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+const ADJACENT_DIRECTIONS: AdjacentDirection[] = [Direction.up, Direction.down, Direction.right, Direction.left,
+    Diagonal.northeast, Diagonal.northwest, Diagonal.southeast, Diagonal.southwest];
 
 let lastDirection = Direction.up;
 
@@ -71,13 +82,17 @@ class Board {
             [Direction.up]: Direction.down,
             [Direction.down]: Direction.up,
             [Direction.left]: Direction.right,
-            [Direction.right]: Direction.left
+            [Direction.right]: Direction.left,
+            [Diagonal.northeast]: Diagonal.southwest,
+            [Diagonal.southwest]: Diagonal.northeast,
+            [Diagonal.northwest]: Diagonal.southeast,
+            [Diagonal.southeast]: Diagonal.northwest
         }
-        for (let index = 0; index < DIRECTIONS.length; index++) {
-            if (reverseDirection[DIRECTIONS[index]] === lastDirection) {
+        for (let index = 0; index < ADJACENT_DIRECTIONS.length; index++) {
+            if (reverseDirection[ADJACENT_DIRECTIONS[index]] === lastDirection) {
                 continue;   
             }
-            const adjCoords: Coordinates = getAdjacentCoords(coords, DIRECTIONS[index]);
+            const adjCoords: Coordinates = getAdjacentCoords(coords, ADJACENT_DIRECTIONS[index]);
             if (this.isInBounds(adjCoords) && !this.isUnoccupied(adjCoords)) {
                 return true;
             }
@@ -129,12 +144,16 @@ function distance(start: Coordinates, end: Coordinates) {
     return Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
 }
 
-function getAdjacentCoords(position: Coordinates, direction: Direction) {
+function getAdjacentCoords(position: Coordinates, direction: AdjacentDirection) {
     const directionToCoords = {
         [Direction.up]: { x: 0, y: 1 },
         [Direction.down]: { x: 0, y: -1 },
         [Direction.left]: { x: -1, y: 0 },
-        [Direction.right]: { x: 1, y: 0 }
+        [Direction.right]: { x: 1, y: 0 },
+        [Diagonal.northeast]: { x: 1, y: 1},
+        [Diagonal.northwest]: { x: -1, y: 1 },
+        [Diagonal.southeast]: { x: 1, y: -1 },
+        [Diagonal.southwest]: { x: -1, y: -1 }
     }
     const delta = directionToCoords[direction];
     return { x: position.x + delta.x, y: position.y + delta.y };
