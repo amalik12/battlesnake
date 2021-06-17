@@ -35,7 +35,13 @@ const DIRECTIONS: Direction[] = [Direction.up, Direction.down, Direction.right, 
 const ADJACENT_DIRECTIONS: AdjacentDirection[] = [Direction.up, Direction.down, Direction.right, Direction.left,
     Diagonal.northeast, Diagonal.northwest, Diagonal.southeast, Diagonal.southwest];
 
-let lastDirection = Direction.up;
+interface SnakeState {
+    lastDirection: Direction
+
+    hasEaten: boolean
+}
+
+const stateMap: Map<string, SnakeState> = new Map();
 
 class Board {
     private width: number;
@@ -175,7 +181,9 @@ function handleIndex(request: Request, response: Response<SnakeInfo>) {
 }
 
 function handleStart(request: GameRequest, response: Response) {
-    const gameData = request.body
+    const gameData: GameState = request.body;
+
+    stateMap.set(gameData.game.id, { lastDirection: Direction.up, hasEaten: false });
 
     console.log('START')
     response.status(200).send('ok')
@@ -196,11 +204,12 @@ function handleMove(request: GameRequest, response: Response<Move>) {
 
     let move: Direction = Direction.up;
     let maxScore = -50;
+    const state = stateMap.get(gameData.game.id);
 
     DIRECTIONS.forEach(direction => {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
         const tail = gameData.you.body[gameData.you.body.length - 1];
-        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !areCoordsEqual(newCoords, tail))) {
+        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten)) {
             scores[direction] -= 10;           
         } else {
             let dist = 500;
@@ -246,15 +255,21 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     })
 
     console.log('Game:', gameData.game.id, 'Turn:', gameData.turn, 'MOVE:', move)
-    lastDirection = move;
+    
+    if (state !== undefined) {
+        state.lastDirection = move;
+        const newCoords: Coordinates = getAdjacentCoords(position, move);
+        state.hasEaten = board.isInBounds(newCoords) && board.getData(newCoords) === 'food';
+    }
     response.status(200).send({
         move: move,
     })
 }
 
 function handleEnd(request: GameRequest, response: Response) {
-    const gameData = request.body
+    const gameData: GameState = request.body
 
+    stateMap.delete(gameData.game.id);
     console.log('END')
     response.status(200).send('ok')
 }
