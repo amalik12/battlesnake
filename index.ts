@@ -102,7 +102,7 @@ class Board {
 
     isSnakeHead(coords: Coordinates) {
         const snake = this.snakeMap.get(this.getData(coords))
-        return snake?.head.x === coords.x && snake.head.y === coords.y;
+        return snake !== undefined && areCoordsEqual(snake.head, coords);
     }
 
     isReachable(start: Coordinates, end: Coordinates) {
@@ -110,7 +110,7 @@ class Board {
     }
 
     private isReachableSearch(start: Coordinates, end: Coordinates, map: any) {
-      if (start.x === end.x && start.y === end.y) {
+      if (areCoordsEqual(start, end)) {
           return true;
       }
       if (map[start.x + ',' + start.y] !== undefined || !this.isInBounds(start) || !this.isUnoccupied(start)) {
@@ -142,6 +142,10 @@ class Board {
 
 function distance(start: Coordinates, end: Coordinates) {
     return Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
+}
+
+function areCoordsEqual(coords1: Coordinates, coords2: Coordinates) {
+    return coords1.x === coords2.x && coords1.y === coords2.y
 }
 
 function getAdjacentCoords(position: Coordinates, direction: AdjacentDirection) {
@@ -195,7 +199,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
 
     DIRECTIONS.forEach(direction => {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
-        if (!board.isInBounds(newCoords) || !board.isUnoccupied(newCoords)) {
+        const tail = gameData.you.body[gameData.you.body.length - 1];
+        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !areCoordsEqual(newCoords, tail))) {
             scores[direction] -= 10;           
         } else {
             let dist = 500;
@@ -227,7 +232,6 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 return true;
             })
             if (board.isOnEdge(position) || board.isBodyBlocked(position)) {
-                const tail = gameData.you.body[gameData.you.body.length - 1];
                 console.log('searching');
                 if (!board.isReachable(newCoords, tail)) {
                     scores[direction] -= 5;
