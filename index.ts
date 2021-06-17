@@ -22,7 +22,9 @@ enum Direction {
     right = 'right'
 }
 
-const directions: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+const DIRECTIONS: Direction[] = [Direction.up, Direction.down, Direction.right, Direction.left]
+
+let lastDirection = Direction.up;
 
 class Board {
     private width: number;
@@ -64,6 +66,25 @@ class Board {
         || coords.x === 0 || coords.x === this.width - 1;
     }
 
+    isBodyBlocked(coords: Coordinates) {
+        const reverseDirection = {
+            [Direction.up]: Direction.down,
+            [Direction.down]: Direction.up,
+            [Direction.left]: Direction.right,
+            [Direction.right]: Direction.left
+        }
+        for (let index = 0; index < DIRECTIONS.length; index++) {
+            if (reverseDirection[DIRECTIONS[index]] === lastDirection) {
+                continue;   
+            }
+            const adjCoords: Coordinates = getAdjacentCoords(coords, DIRECTIONS[index]);
+            if (this.isInBounds(adjCoords) && !this.isUnoccupied(adjCoords)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     isSnakeHead(coords: Coordinates) {
         const snake = this.snakeMap.get(this.getData(coords))
         return snake?.head.x === coords.x && snake.head.y === coords.y;
@@ -81,9 +102,8 @@ class Board {
           return false;
       }
       map[start.x + ',' + start.y] = 1;
-      for (let i = 0; i < directions.length; i++) {
-          const delta = directionToCoords[directions[i]];
-          const newCoords: Coordinates = { x: start.x + delta.x, y: start.y + delta.y };
+      for (let i = 0; i < DIRECTIONS.length; i++) {
+          const newCoords: Coordinates = getAdjacentCoords(start, DIRECTIONS[i]);
           if (this.isReachableSearch(newCoords, end, map)) {
               return true;
           }
@@ -105,15 +125,19 @@ class Board {
     }
 }
 
-const directionToCoords = {
-    [Direction.up]: { x: 0, y: 1 },
-    [Direction.down]: { x: 0, y: -1 },
-    [Direction.left]: { x: -1, y: 0 },
-    [Direction.right]: { x: 1, y: 0 }
-}
-
 function distance(start: Coordinates, end: Coordinates) {
     return Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
+}
+
+function getAdjacentCoords(position: Coordinates, direction: Direction) {
+    const directionToCoords = {
+        [Direction.up]: { x: 0, y: 1 },
+        [Direction.down]: { x: 0, y: -1 },
+        [Direction.left]: { x: -1, y: 0 },
+        [Direction.right]: { x: 1, y: 0 }
+    }
+    const delta = directionToCoords[direction];
+    return { x: position.x + delta.x, y: position.y + delta.y };
 }
 
 function handleIndex(request: Request, response: Response<SnakeInfo>) {
@@ -150,10 +174,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     let move: Direction = Direction.up;
     let maxScore = -50;
 
-    console.log(position);
-    directions.forEach(direction => {
-        const delta = directionToCoords[direction];
-        const newCoords = { x: position.x + delta.x, y: position.y + delta.y };
+    DIRECTIONS.forEach(direction => {
+        const newCoords: Coordinates = getAdjacentCoords(position, direction);
         if (!board.isInBounds(newCoords) || !board.isUnoccupied(newCoords)) {
             scores[direction] -= 10;           
         } else {
@@ -168,9 +190,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             if ((gameData.you.health < 25 || dist <= 3) && distance(newCoords, food) < dist) {
                 scores[direction] += 1;
             }
-            directions.every(adjacent => {
-                const adjDelta = directionToCoords[adjacent];
-                const adjCoords = { x: newCoords.x + adjDelta.x, y: newCoords.y + adjDelta.y };
+            DIRECTIONS.every(adjacent => {
+                const adjCoords: Coordinates = getAdjacentCoords(newCoords, adjacent);
                 if (!board.isInBounds(adjCoords) || board.isUnoccupied(adjCoords)) {
                     return true;
                 }
@@ -186,7 +207,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 }
                 return true;
             })
-            if (board.isOnEdge(position)) {
+            if (board.isOnEdge(position) || board.isBodyBlocked(position)) {
                 const tail = gameData.you.body[gameData.you.body.length - 1];
                 console.log('searching');
                 if (!board.isReachable(newCoords, tail)) {
@@ -202,6 +223,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
     })
 
     console.log('MOVE: ' + move)
+    lastDirection = move;
     response.status(200).send({
         move: move,
     })
