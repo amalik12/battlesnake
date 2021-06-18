@@ -252,7 +252,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                     food = coord;
                 }
             })
-            if ((gameData.you.health < 25 || dist <= 8) && distance(newCoords, food) < dist) {
+            if ((gameData.you.health < 25 || dist <= 6) && distance(newCoords, food) < dist) {
                 scores[direction] += 1;
             }
             DIRECTIONS.every(adjacent => {
