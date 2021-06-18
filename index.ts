@@ -39,6 +39,8 @@ interface SnakeState {
     lastDirection: Direction
 
     hasEaten: boolean
+
+    lastBoard?: Board
 }
 
 const stateMap: Map<string, SnakeState> = new Map();
@@ -118,7 +120,13 @@ class Board {
         return snake !== undefined && areCoordsEqual(snake.head, coords);
     }
 
-    isReachable(start: Coordinates, end: Coordinates) {
+    isValidSnakeTail(lastBoard: Board | undefined, coords: Coordinates) {
+        const snake = this.snakeMap.get(this.getData(coords))
+        if (snake === undefined) return false;
+        return lastBoard?.getData(snake.head) !== 'food' && areCoordsEqual(snake.body[snake.body.length - 1], coords);
+    }
+    
+    isReachable(start: Coordinates, end: Coordinates, lastBoard: Board) {
         const visited = new Set();
         const stack: Coordinates[] = [start];
         let found = false;
@@ -129,7 +137,7 @@ class Board {
             if (areCoordsEqual(node, end)) {
                 found = true;
             }
-            if (visited.has(node.x + ',' + node.y) || !this.isInBounds(node) || !this.isUnoccupied(node)) {
+            if (visited.has(node.x + ',' + node.y) || !this.isInBounds(node) || (!this.isUnoccupied(node) && !this.isValidSnakeTail(lastBoard, node))) {
                 continue;
             }
             visited.add(node.x + ',' + node.y);
@@ -233,8 +241,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
 
     DIRECTIONS.forEach(direction => {
         const newCoords: Coordinates = getAdjacentCoords(position, direction);
-        const tail = gameData.you.body[gameData.you.body.length - 1];
-        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !(areCoordsEqual(newCoords, tail) && !state?.hasEaten))) {
+        if (!board.isInBounds(newCoords) || (!board.isUnoccupied(newCoords) && !board.isValidSnakeTail(state?.lastBoard, newCoords))) {
             scores[direction] -= 40;           
         } else {
             let dist = 500;
@@ -273,7 +280,8 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             })
             if (board.isOnEdge(position) || board.isBodyBlocked(position)) {
                 console.log('searching');
-                const searchResult = board.isReachable(newCoords, tail) || 0;
+                const tail = gameData.you.body[gameData.you.body.length - 1];
+                const searchResult = board.isReachable(newCoords, tail, state?.lastBoard) || 0;
                 if (searchResult < 0) {
                     scores[direction] -= 6;
                 }
@@ -293,6 +301,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
         state.lastDirection = move;
         const newCoords: Coordinates = getAdjacentCoords(position, move);
         state.hasEaten = board.isInBounds(newCoords) && board.getData(newCoords) === 'food';
+        state.lastBoard = board;
     }
     response.status(200).send({
         move: move,
