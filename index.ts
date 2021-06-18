@@ -126,7 +126,7 @@ class Board {
         return lastBoard?.getData(snake.head) !== 'food' && areCoordsEqual(snake.body[snake.body.length - 1], coords);
     }
     
-    isReachable(start: Coordinates, end: Coordinates, lastBoard: Board) {
+    isReachable(start: Coordinates, end: Coordinates, lastBoard: Board | undefined) {
         const visited = new Set();
         const stack: Coordinates[] = [start];
         let found = false;
