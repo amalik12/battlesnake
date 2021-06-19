@@ -255,6 +255,12 @@ function handleMove(request: GameRequest, response: Response<Move>) {
             if ((gameData.you.health < 25 || dist <= 6) && distance(newCoords, food) < dist) {
                 scores[direction] += 1;
             }
+
+            if (board.isOnEdge(newCoords)) {
+                scores[direction] -= 0.6;
+            }
+
+            // check for head-to-head collisions
             DIRECTIONS.every(adjacent => {
                 const adjCoords: Coordinates = getAdjacentCoords(newCoords, adjacent);
                 if (!board.isInBounds(adjCoords) || board.isUnoccupied(adjCoords)) {
