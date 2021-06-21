@@ -260,10 +260,6 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 scores[direction] -= 0.6;
             }
 
-            if (board.isValidSnakeTail(state?.lastBoard, newCoords)) {
-                scores[direction] += 1;
-            }
-
             // check for head-to-head collisions
             DIRECTIONS.every(adjacent => {
                 const adjCoords: Coordinates = getAdjacentCoords(newCoords, adjacent);
