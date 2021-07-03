@@ -278,7 +278,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                         }
                         return false;
                     } else if (board.isSnakeHead(adjCoords)) {
-                        scores[direction] += 10;
+                        scores[direction] += 6;
                         return false;
                     }
                 }
@@ -289,7 +289,7 @@ function handleMove(request: GameRequest, response: Response<Move>) {
                 const tail = gameData.you.body[gameData.you.body.length - 1];
                 const searchResult = board.isReachable(newCoords, tail, state?.lastBoard) || 0;
                 if (searchResult < 0) {
-                    scores[direction] -= 6;
+                    scores[direction] -= 10;
                 }
                 scores[direction] += Math.abs(searchResult) * 0.1;
                 console.log('done', direction, searchResult);
